@@ -62,19 +62,20 @@ $ terraform fmt
 $ terraform validate    #計10回はトライアンドエラーしていました。。
 $ terraform apply
 ```
-コードはこちら→[main.tf](stage/main.tf)
+
 
 ## vpc.tfを編集
 ### 参考記事
-* [【Terraform入門】AWSのVPCとEC2を構築してみる]https://kacfg.com/terraform-vpc-ec2/
-* https://kacfg.com/terraform-vpc-ec2/
-* https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet
-* https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway
-* https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway_attachment
-* 
-* https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table
-  * Routeととしてのresource記載は不要で、RouteTableのresource内部にrouteの内容を記述できる
-* https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
+* [【Terraform入門】AWSのVPCとEC2を構築してみる](https://kacfg.com/terraform-vpc-ec2/)
+* 公式doc
+  * https://kacfg.com/terraform-vpc-ec2/
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway_attachment
+  * 
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table
+    * Routeととしてのresource記載は不要で、RouteTableのresource内部にrouteの内容を記述できる
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
 
 
 
@@ -82,6 +83,7 @@ $ terraform apply
 
 
 ## 結果
+コーディングや結果は以下の通りです。
 |.tfファイル|結果|トライアンドエラー|
 |:---|:---|:---|
 |[main.tf](stage/main.tf)|[result_vpc.tf.md](result_vpc.tf.md)|[TryandError01_変数定義の記述場所.md](TryandError01_変数定義の記述場所.md)|

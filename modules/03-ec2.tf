@@ -1,3 +1,6 @@
+############
+# data取得定義
+############
 #最新のAMIを取得する
 data "aws_ami" "amzlinux2" {
   #最新版を取得
@@ -10,15 +13,17 @@ data "aws_ami" "amzlinux2" {
   }
 }
 
-
+############
+# リソース定義
+############
 resource "aws_instance" "ec2_tf" {
-  ami                    = data.aws_ami.amzlinux2.id
-  instance_type          = "t2.micro"
-  key_name               = "Kawasaki1002"
+  ami           = data.aws_ami.amzlinux2.id
+  instance_type = "t2.micro"
+  key_name      = "Kawasaki1002"
   #インスタンスをパブリックIPアドレスに関連付けるか（ブール値）
   associate_public_ip_address = true
-  subnet_id              = aws_subnet.public_1c_sn.id
-  vpc_security_group_ids = [aws_security_group.sg_ec2.id]
+  subnet_id                   = aws_subnet.public_1c_sn.id
+  vpc_security_group_ids      = [aws_security_group.sg_ec2.id]
   #terraform applyの時に最新版としてAMIを更新しないようにlifecycleを設定
   lifecycle {
     ignore_changes = [

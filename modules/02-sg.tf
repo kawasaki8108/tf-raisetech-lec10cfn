@@ -55,13 +55,15 @@ resource "aws_security_group" "sg_rds" {
   tags = {
     Name = "terraform-stage"
   }
-
-  ingress {
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+}
+# RDS用のsgのルール｜source_security_group_idを使いたいので"aws_security_group_rule"を使った
+resource "aws_security_group_rule" "sg_rds_ingress" {
+  type                     = "ingress"
+  to_port                  = 3306
+  from_port                = 3306
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.sg_rds.id
+  source_security_group_id = aws_security_group.sg_ec2.id
 }
 
 ############

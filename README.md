@@ -60,16 +60,25 @@ make_bucket: tf-raisetech-lec10cfn
 
 
 ## 結果
-コーディングや結果は以下の通りです。
-* main.tfは[modules](modules)フォルダにあります
-* 各リソースごとの.tfファイルは[stage](stage)フォルダにあります
-* 
+コーディングや結果は下表の通りです。
+* main.tfは[stage](stage)フォルダにあります
+* 各リソースごとの.tfファイルは[modules](modules)フォルダにあります
+* 「結果」はマネジメントコンソール画面のキャプチャを撮りためているので、それを上げる予定です
+* 「トランアンドエラー」もキャプチャをとりためているので、それを挙げていく予定です
+<br>
+
 |.tfファイル|結果|トライアンドエラー|
 |:---|:---|:---|
-|[main.tf](stage/main.tf)|[result_vpc.tf.md](result_vpc.tf.md)|[TryandError01_変数定義の記述場所.md](TryandError01_変数定義の記述場所.md)|
-|[aws-vpc.tf](modules/aws-vpc.tf)|[result_vpc.tf.md](result_vpc.tf.md)|-|
+|[main.tf](stage/main.tf)|-|[TryandError01_変数定義の記述場所.md](TryandError01_変数定義の記述場所.md)|
+|[01-vpc.tf](modules/01-vpc.tf)|[result_vpc.tf.md](result_vpc.tf.md)|-|
+|[02-sg.tf](modules/02-sg.tf)|[]()|[]()|
+|[03-ec2.tf](modules/03-ec2.tf)|[]()|[]()|
+|[04-rds.tf](modules/04-rds.tf)|[]()|[]()|
+|[05-alb.tf](modules/05-alb.tf)|[]()|[]()|
+|[06-s3.tf](modules/06-s3.tf)|[]()|[]()|
 
 
+いろいろ参考にして実装しました。以下の通りです。
 
 ## main.tfを編集
 stageのディレクトリで`terraform init`してから以下の順に操作
@@ -99,6 +108,10 @@ $ terraform apply
 * https://beyondjapan.com/blog/2022/10/terraform-how-to-use-security-group/
 * 公式
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule
+    * 特にRDS用のセキュリティグループのインバウンドルールにおけるソースをEC2用のセキュリティグループIDにするという方法の参照として使いました。↓の参考記事も同様です。
+* https://ohshige.hatenablog.com/entry/2019/11/11/190000
+* https://qiita.com/suzuki0430/items/2dbd88dfb5ed53016914
 
 ## ec2.tfを編集
 ### 参考記事
@@ -111,3 +124,10 @@ $ terraform apply
 
 ## rds.tfを編集
 ### 参考記事
+* https://zenn.dev/suganuma/articles/fe14451aeda28f
+* https://tech.isid.co.jp/entry/terraform_manage_master_user_password
+* https://zenn.dev/yumemi_inc/articles/081b0190db8260
+* 公式
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_subnet_group
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance

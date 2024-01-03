@@ -7,8 +7,8 @@
 # ----------
 resource "aws_vpc" "main_vpc" {
   cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
+  enable_dns_support   = true #Public DNSを割り当てるため
+  enable_dns_hostnames = true #Public DNSを割り当てるため
 
   tags = {
     Name = "terraform-stage" # 文字列内に変数を埋め込む場合はこの書き方（v0.11形式）

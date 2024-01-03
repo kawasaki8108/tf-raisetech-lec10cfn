@@ -87,11 +87,22 @@ $ terraform apply
 * 公式
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
 
+## ec2.tfを編集
+### 参考記事
+* https://zenn.dev/supersatton/articles/c87853cc5a3dbd
+* https://qiita.com/okdyy75/items/73641a0247bae1fa7f31
+* https://khasegawa.hatenablog.com/entry/2017/10/03/000000
+* [[Terraform][CloudFormation]最新のAMI IDの取得方法](https://qiita.com/to-fmak/items/7623ee6e15249a4bcedd#:~:text=%E3%80%8CData%20Source%E3%80%8D%E3%81%A7%E6%9C%80%E6%96%B0%E3%81%AE,AMI%E3%82%92%E5%8F%96%E5%BE%97%E3%81%A7%E3%81%8D%E3%81%BE%E3%81%99%E3%80%82)
+* 公式
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/instance
 
-
+## rds.tfを編集
+### 参考記事
 
 ## 結果
 コーディングや結果は以下の通りです。
+* main.tfは[modules](modules)フォルダにあります
+* 各リソースごとの.tfファイルは[stage](stage)フォルダにあります
 |.tfファイル|結果|トライアンドエラー|
 |:---|:---|:---|
 |[main.tf](stage/main.tf)|[result_vpc.tf.md](result_vpc.tf.md)|[TryandError01_変数定義の記述場所.md](TryandError01_変数定義の記述場所.md)|

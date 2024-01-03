@@ -80,7 +80,12 @@ $ terraform apply
     * Routeととしてのresource記載は不要で、RouteTableのresource内部にrouteの内容を記述できる
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
 
-
+## sg.tfを編集
+### 参考記事
+* https://dev.classmethod.jp/articles/terraform-security-group/
+* https://beyondjapan.com/blog/2022/10/terraform-how-to-use-security-group/
+* 公式
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
 
 
 

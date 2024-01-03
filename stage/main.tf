@@ -22,13 +22,7 @@ terraform {
 }
 
 # moduleの利用
-module "aws-vpc" {
-    # moduleの位置
-    source = "../modules"
-    # 変数の定義
-    my_cidr_block = "10.0.0.0/16"
-    my_env        = "stage"
-    az_a    = "ap-northeast-1a"
-    az_c    = "ap-northeast-1c"
-
+module "aws-modules" {
+  # moduleの位置
+  source = "../modules"
 }

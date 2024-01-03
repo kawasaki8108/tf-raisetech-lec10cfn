@@ -58,6 +58,19 @@ $ aws s3 mb s3://tf-raisetech-lec10cfn
 make_bucket: tf-raisetech-lec10cfn
 ```
 
+
+## 結果
+コーディングや結果は以下の通りです。
+* main.tfは[modules](modules)フォルダにあります
+* 各リソースごとの.tfファイルは[stage](stage)フォルダにあります
+* 
+|.tfファイル|結果|トライアンドエラー|
+|:---|:---|:---|
+|[main.tf](stage/main.tf)|[result_vpc.tf.md](result_vpc.tf.md)|[TryandError01_変数定義の記述場所.md](TryandError01_変数定義の記述場所.md)|
+|[aws-vpc.tf](modules/aws-vpc.tf)|[result_vpc.tf.md](result_vpc.tf.md)|-|
+
+
+
 ## main.tfを編集
 stageのディレクトリで`terraform init`してから以下の順に操作
 ```bash
@@ -98,12 +111,3 @@ $ terraform apply
 
 ## rds.tfを編集
 ### 参考記事
-
-## 結果
-コーディングや結果は以下の通りです。
-* main.tfは[modules](modules)フォルダにあります
-* 各リソースごとの.tfファイルは[stage](stage)フォルダにあります
-|.tfファイル|結果|トライアンドエラー|
-|:---|:---|:---|
-|[main.tf](stage/main.tf)|[result_vpc.tf.md](result_vpc.tf.md)|[TryandError01_変数定義の記述場所.md](TryandError01_変数定義の記述場所.md)|
-|[aws-vpc.tf](modules/aws-vpc.tf)|[result_vpc.tf.md](result_vpc.tf.md)|-|

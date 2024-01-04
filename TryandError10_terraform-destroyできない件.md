@@ -3,16 +3,16 @@
 * 今回はわかりやすいとこところでは、RDS、VPC、IGW（InternernetGateWay）、ALBが残っていました。
 * わかりにくいところで、S3、セキュリティグループ
 ## なかなか消えない状態とは
-* RDS(2m40s)
+* RDS(2m40s)<br>
 ![rdsがなかなか消えない](image/rdsがなかなか消えない.png)
-* ALB
+* ALB<br>
 ![ALBがなかなか消えない](image/ALBがなかなか消えない.png)
   * 赤線のところは、最後まで消えず、エラー返されたときにハッとなりました。。
   * そして実はALBに適用したセキュリティグループも消えずに残っていました。
-* IGW(14m10s)＋エラーメッセージ
+* IGW(14m10s)＋エラーメッセージ<br>
 ![IGWがなかなか消えない](image/IGWがなかなか消えない.png)
 ## エラーメッセージ
-以下の内容でした。（ChatGPT）
+以下の内容でした。（ChatGPT）<br>
 ![ALB＋IGWのdestroyでのエラー内容](image/ALB＋IGWのdestroyでのエラー内容.png)
 
 

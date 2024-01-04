@@ -79,6 +79,9 @@ make_bucket: tf-raisetech-lec10cfn
 |[05-alb.tf](modules/05-alb.tf)|[]()|[]()|
 |[06-s3.tf](modules/06-s3.tf)|[]()|[]()|
 
+### 後始末`terraform destroy`時の苦悩
+[TryandError10_terraform-destroyできない件.md](TryandError10_terraform-destroyできない件.md)にまとめました
+
 ### 簡易的な結果確認
 * EC2にNginxをインストール・起動し、ALBからブラウザでアクセスして確認しました。RDS側の確認まではやっていません。
 ![Nginx画面](image/tfで構築したALBのDNSからブラウザでアクセス.png)

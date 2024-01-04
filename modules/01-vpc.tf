@@ -6,12 +6,12 @@
 # VPC
 # ----------
 resource "aws_vpc" "main_vpc" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = var.myvpc_cidr_block
   enable_dns_support   = true #Public DNSを割り当てるため
   enable_dns_hostnames = true #Public DNSを割り当てるため
 
   tags = {
-    Name = "terraform-stage" # 文字列内に変数を埋め込む場合はこの書き方（v0.11形式）
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}" 
   }
 }
 
@@ -22,10 +22,10 @@ resource "aws_vpc" "main_vpc" {
 resource "aws_subnet" "public_1a_sn" {
   vpc_id            = aws_vpc.main_vpc.id
   cidr_block        = "10.0.0.0/24"
-  availability_zone = "ap-northeast-1a"
+  availability_zone = var.az_a
 
   tags = {
-    Name = "terraform-stage-public-1a-sn"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}-public-1a-sn"
   }
 }
 
@@ -33,10 +33,10 @@ resource "aws_subnet" "public_1a_sn" {
 resource "aws_subnet" "public_1c_sn" {
   vpc_id            = aws_vpc.main_vpc.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "ap-northeast-1c"
+  availability_zone = var.az_c
 
   tags = {
-    Name = "terraform-stage-public-1c-sn"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}-public-1c-sn"
   }
 }
 
@@ -44,10 +44,10 @@ resource "aws_subnet" "public_1c_sn" {
 resource "aws_subnet" "private_1a_sn" {
   vpc_id            = aws_vpc.main_vpc.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "ap-northeast-1a"
+  availability_zone = var.az_a
 
   tags = {
-    Name = "terraform-stage-private-1a-sn"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}-private-1a-sn"
   }
 }
 
@@ -55,10 +55,10 @@ resource "aws_subnet" "private_1a_sn" {
 resource "aws_subnet" "private_1c_sn" {
   vpc_id            = aws_vpc.main_vpc.id
   cidr_block        = "10.0.3.0/24"
-  availability_zone = "ap-northeast-1c"
+  availability_zone = var.az_c
 
   tags = {
-    Name = "terraform-stage-private-1c-sn"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}-private-1c-sn"
   }
 }
 
@@ -68,7 +68,7 @@ resource "aws_subnet" "private_1c_sn" {
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main_vpc.id
   tags = {
-    Name = "terraform-stage"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 }
 
@@ -94,7 +94,7 @@ resource "aws_route_table" "public_rt" {
     gateway_id = aws_internet_gateway.gw.id
   }
   tags = {
-    Name = "terraform-stage"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 }
 

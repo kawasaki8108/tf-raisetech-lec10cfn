@@ -17,9 +17,9 @@ data "aws_ami" "amzlinux2" {
 # リソース定義
 ############
 resource "aws_instance" "ec2_tf" {
-  ami           = data.aws_ami.amzlinux2.id
-  instance_type = "t2.micro"
-  key_name      = "Kawasaki1002"
+  ami           = data.aws_ami.amzlinux2.id #上記のデータソースで取得したAMIを代入
+  instance_type = var.ec2instance_type #"t2.micro"など
+  key_name      = var.ec2key_name #keypairの名前
   #インスタンスをパブリックIPアドレスに関連付けるか（ブール値）
   associate_public_ip_address = true
   subnet_id                   = aws_subnet.public_1c_sn.id
@@ -31,7 +31,7 @@ resource "aws_instance" "ec2_tf" {
     ]
   }
   tags = {
-    Name = "terraform-stage"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 
 }

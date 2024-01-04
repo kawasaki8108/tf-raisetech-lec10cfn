@@ -2,6 +2,9 @@
 # データ取得の定義
 ############
 #System ManegerのParameter Storeに保管しているPWを取得する
+#予めSystem ManegerのParameter Storeで作成しておかないといけないのが完全なIaCではないのが痛い
+#ParameterStoreは無料で使えるがSecretManagerは有料なのでParameterStoreにした
+#現場で書くなら変数扱いにしたほうがいいと思います
 data "aws_ssm_parameter" "ssm_paramstr_pw_tf" {
   name            = "RDSMasterPassword"
   with_decryption = true
@@ -17,7 +20,7 @@ resource "aws_db_subnet_group" "dbsng_tf" {
   subnet_ids = [aws_subnet.private_1a_sn.id, aws_subnet.private_1c_sn.id]
 
   tags = {
-    Name = "terraform-stage"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 }
 
@@ -26,11 +29,12 @@ resource "aws_db_instance" "rds_tf" {
   allocated_storage = 10
   #↓「An argument named "db_name" is not expected here.」と言われたのでコメントアウト
   # db_name           = "mydb"
-  engine            = "mysql"
-  engine_version    = "8.0.33"
-  instance_class    = "db.t3.micro"
-  username          = "admin"
-  availability_zone = "ap-northeast-1c"
+  engine            = var.dbengine
+  engine_version    = var.dbengine_version
+  instance_class    = var.dbinstance_class
+  #mysqlのusernameは"admin"と書いてもいいですが、今回はtfvarsに大事な情報を変数として入れ、tfvarsのみ公開しない（.gitignore）と仮定してこの記述としました
+  username          = var.mysqlusername
+  availability_zone = var.az_c
   multi_az          = false
   #dataで取得した値を入れる
   password            = data.aws_ssm_parameter.ssm_paramstr_pw_tf.value
@@ -40,7 +44,7 @@ resource "aws_db_instance" "rds_tf" {
   vpc_security_group_ids = [aws_security_group.sg_rds.id]
 
   tags = {
-    Name = "terraform-stage"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 }
 

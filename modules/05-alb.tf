@@ -8,8 +8,8 @@ resource "aws_lb" "alb_tf" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.sg_alb.id]
   subnets            = [aws_subnet.public_1a_sn.id, aws_subnet.public_1c_sn.id]
-
-  enable_deletion_protection = true
+#削除保護はデフォルトでfalse(off)ですが本番利用する際は基本Onだとおもうので今回は明示的に記述します。
+  enable_deletion_protection = false
 
   access_logs {
     bucket  = aws_s3_bucket.s3-alb-log240104tf.id
@@ -18,7 +18,7 @@ resource "aws_lb" "alb_tf" {
   }
 
   tags = {
-    Name = "terraform-stage"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 }
 
@@ -32,7 +32,7 @@ resource "aws_lb_target_group" "alb-tg_tf" {
   vpc_id           = aws_vpc.main_vpc.id
 
   tags = {
-    name = "terraform-stage"
+    name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 
   health_check {

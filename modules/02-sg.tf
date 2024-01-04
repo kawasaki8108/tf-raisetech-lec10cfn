@@ -8,7 +8,7 @@ resource "aws_security_group" "sg_ec2" {
   description = "sg_ec2"
   vpc_id      = aws_vpc.main_vpc.id
   tags = {
-    Name = "terraform-stage"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 
   egress {
@@ -36,7 +36,7 @@ resource "aws_security_group" "sg_alb" {
   description = "sg_alb"
   vpc_id      = aws_vpc.main_vpc.id
   tags = {
-    Name = "terraform-stage"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 
   ingress {
@@ -59,7 +59,7 @@ resource "aws_security_group" "sg_rds" {
   description = "sg_rds"
   vpc_id      = aws_vpc.main_vpc.id
   tags = {
-    Name = "terraform-stage"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 }
 # RDS用のsgのルール｜source_security_group_idを使いたいので"aws_security_group_rule"を使った

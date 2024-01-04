@@ -131,3 +131,14 @@ $ terraform apply
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_subnet_group
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance
+
+alb.tfとs3.tfを編集
+### 参考記事
+* https://katsuya-place.com/terraform-elb-basic/
+* https://cloud5.jp/terraform-alb/
+* https://y-ohgi.com/introduction-terraform/handson/alb/
+* 公式
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb
+  * https://www.terraform.io/docs/providers/aws/r/lb_listener.html
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket
+

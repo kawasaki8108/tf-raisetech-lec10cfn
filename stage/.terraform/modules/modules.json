@@ -1,0 +1,1 @@
+{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"aws-modules","Source":"../modules","Dir":"../modules"},{"Key":"aws-resource","Source":"../modules","Dir":"../modules"},{"Key":"aws-sg","Source":"../modules","Dir":"../modules"},{"Key":"aws-vpc","Source":"../modules","Dir":"../modules"},{"Key":"my_vpc","Source":"../modules","Dir":"../modules"}]}

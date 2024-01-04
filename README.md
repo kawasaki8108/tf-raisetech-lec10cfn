@@ -60,7 +60,8 @@ make_bucket: tf-raisetech-lec10cfn
 
 
 ## 結果
-コーディングや結果は下表の通りです。
+### コーディングや結果
+下表の通りです。
 * main.tfは[stage](stage)フォルダにあります
 * 各リソースごとの.tfファイルは[modules](modules)フォルダにあります
 * 「結果」はマネジメントコンソール画面のキャプチャを撮りためているので、それを上げる予定です
@@ -77,10 +78,17 @@ make_bucket: tf-raisetech-lec10cfn
 |[05-alb.tf](modules/05-alb.tf)|[]()|[]()|
 |[06-s3.tf](modules/06-s3.tf)|[]()|[]()|
 
+### 簡易的な結果確認
+* EC2にNginxをインストール・起動し、ALBからブラウザでアクセスして確認しました。RDS側の確認まではやっていません。
+![Nginx画面](image/tfで構築したALBのDNSからブラウザでアクセス.png)
+* 一部トライアンドエラーを以下に記載します。上図左のegressについてのルール追加の裏話です
+  * 最初、ALBに適用しているセキュリティグループについてはアウトバウンド(egress)を記述していませんでした。
+  * そのせいではじめは「504 Gateway Timeout」エラーが返されていました。（コンソール見て確認しました）
+  * 調べるとTerraformはアウトバウンドルールを明示的に記述しないとアウトバウンドルールが反映されないようでした。
 
 いろいろ参考にして実装しました。以下の通りです。
-
-## main.tfを編集
+## 各moduleを作成
+### main.tfを編集
 stageのディレクトリで`terraform init`してから以下の順に操作
 ```bash
 $ terraform fmt
@@ -89,8 +97,8 @@ $ terraform apply
 ```
 
 
-## vpc.tfを編集
-### 参考記事
+### vpc.tfを編集
+#### 参考記事
 * [【Terraform入門】AWSのVPCとEC2を構築してみる](https://kacfg.com/terraform-vpc-ec2/)
 * 公式doc
   * https://kacfg.com/terraform-vpc-ec2/
@@ -102,8 +110,8 @@ $ terraform apply
     * Routeととしてのresource記載は不要で、RouteTableのresource内部にrouteの内容を記述できる
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
 
-## sg.tfを編集
-### 参考記事
+### sg.tfを編集
+#### 参考記事
 * https://dev.classmethod.jp/articles/terraform-security-group/
 * https://beyondjapan.com/blog/2022/10/terraform-how-to-use-security-group/
 * 公式
@@ -113,8 +121,8 @@ $ terraform apply
 * https://ohshige.hatenablog.com/entry/2019/11/11/190000
 * https://qiita.com/suzuki0430/items/2dbd88dfb5ed53016914
 
-## ec2.tfを編集
-### 参考記事
+### ec2.tfを編集
+#### 参考記事
 * https://zenn.dev/supersatton/articles/c87853cc5a3dbd
 * https://qiita.com/okdyy75/items/73641a0247bae1fa7f31
 * https://khasegawa.hatenablog.com/entry/2017/10/03/000000
@@ -122,8 +130,8 @@ $ terraform apply
 * 公式
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/instance
 
-## rds.tfを編集
-### 参考記事
+### rds.tfを編集
+#### 参考記事
 * https://zenn.dev/suganuma/articles/fe14451aeda28f
 * https://tech.isid.co.jp/entry/terraform_manage_master_user_password
 * https://zenn.dev/yumemi_inc/articles/081b0190db8260
@@ -132,8 +140,8 @@ $ terraform apply
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance
 
-alb.tfとs3.tfを編集
-### 参考記事
+### alb.tfとs3.tfを編集
+#### 参考記事
 * https://katsuya-place.com/terraform-elb-basic/
 * https://cloud5.jp/terraform-alb/
 * https://y-ohgi.com/introduction-terraform/handson/alb/

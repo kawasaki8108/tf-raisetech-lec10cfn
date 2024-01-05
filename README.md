@@ -4,25 +4,48 @@
 * 環境ごとの差異が多い場合などに活用するそうですが、直感的にわかりやすいなと思ったのでworkspace機能ではなくこちらにしました。
 * 各リソースがモジュールとして分離されているので、疎結合を保ったまま構築ができ、たとえば実際の開発現場で、モジュールごとに開発することがあれば便利かと思います。
 * 今回作成するインフラストラクチャは[こちらの構成図（VPC,EC2,RDS,ALB,S3）](https://github.com/kawasaki8108/RaiseTech/blob/main/image_05/RiaseTech-lecture05%E6%A7%8B%E6%88%90%E5%9B%B3.png)です
-## フォルダ構成と空ファイルを用意
-* 以下の構成を作ります
-* この構成の場合、「terraform.tfvars」ファイルを用意していてもうまく読めなかったので、変数定義はmain.tfに記述することにしました
+* DynamoDB を使って、排他ロック（先に操作した人が終わるまで apply などをブロックする）をかけるという方法もありますが今回は割愛します。
+  * https://www.terraform.io/docs/backends/types/s3.html#dynamodb-state-locking
+* 今回作成するフォルダ構成は次の通りです。
+
+## フォルダ構成
+* .terraformフォルダ以下はstageディレクトリで`terraform init`で自動で生成されます
+* terraform.tfvarsファイル使わなくてもmain.tfに変数定義を記述してもいいのですが、今回はtfvarsの使い方を理解するために使用しました。
 ```bash
 \---tf-raisetech-lec10cfn
-    |   .terraform-version
-    |   README.md
+    |   .terraform-version        #バージョン指定
     |
     +---modules
-    |       aws-alb.tf
-    |       aws-ec2.tf
-    |       aws-rds.tf
-    |       aws-s3.tf
-    |       aws-sg.tf
-    |       aws-vpc.tf
+    |       01-vpc.tf
+    |       02-sg.tf
+    |       03-ec2.tf
+    |       04-rds.tf
+    |       05-alb.tf
+    |       06-s3.tf
+    |       variables.tf          #modules下のリソースファイル.tfで使う変数の中身を記述する
     |
     \---stage
-            main.tf
+        |   .terraform.lock.hcl   #`terraform init`で自動で生成される
+        |   main.tf               #中身：provider,terraform,baskend,modulesのブロック＋各moduleで使う変数の中身を"stage環境としては”で記述する
+        |   terraform.tfvars      #stageディレクトリ下での変数定義を入れる
+        |   variables.tf          #stageディレクトリ下での変数名を設定する
+        |
+        \---.terraform            #これ以下は`terraform init`で自動で生成される
+            |   terraform.tfstate
+            |
+            +---modules
+            |       modules.json
+            |
+            \---providers
+                \---registry.terraform.io
+                    \---hashicorp
+                        \---aws
+                            \---3.76.1
+                                \---windows_amd64
+                                        terraform-provider-aws_v3.76.1_x5.exe
+
 ```
+## フォルダと空ファイルを用意
 
 * ユーザー名のディレクトリの下に以下の通りディレクトリ作成(今後も別の要件で使うかもしれないのでフォルダ整理のために)
 ```bash
@@ -34,10 +57,10 @@ $ mkdir ~/TerraformPJ/
 $ git clone https://github.com/username/tf-raisetech-lec10cfn.git
 $ cd tf-raisetech-lec10cfn
 $ mkdir modules && cd $_
-$ touch aws-vpc.tf aws-sg.tf aws-ec2.tf aws-rds.tf aws-alb.tf aws-s3.tf
+$ touch aws-vpc.tf aws-sg.tf aws-ec2.tf aws-rds.tf aws-alb.tf aws-s3.tf variables.tf
 $ mkdir ../stage
 $ cd ../stage
-$ touch main.tf
+$ touch main.tf variables.tf terraform.tfvars
 $ cd ../
 $ pwd
 /c/Users/username/TerraformPJ/tf-raisetech-lec10cfn
@@ -49,7 +72,7 @@ $ cat .terraform-version
 $ cd ../
 $ pwd
 /c/Users/username/TerraformPJ
-$ tree      #ゴールに記載したフォルダ構成になっているはず
+$ tree      #上述のフォルダ構成になっているはず
 ```
 
 ## Backend機能を使う
@@ -58,47 +81,33 @@ $ tree      #ゴールに記載したフォルダ構成になっているはず
 $ aws s3 mb s3://tf-raisetech-lec10cfn
 make_bucket: tf-raisetech-lec10cfn
 ```
-
-
-## 結果
-### コーディングや結果
-下表の通りです。
-* main.tfは[stage](stage)フォルダにあります
-* 各リソースごとの.tfファイルは[modules](modules)フォルダにあります
-* 「結果」はマネジメントコンソール画面のキャプチャを撮りためているので、それを上げる予定です
-* 「トランアンドエラー」もキャプチャをとりためているので、それを挙げていく予定です
-<br>
-
-|.tfファイル|結果|トライアンドエラー|
-|:---|:---|:---|
-|[main.tf](stage/main.tf)|-|[TryandError01_変数定義の記述場所.md](TryandError01_変数定義の記述場所.md)|
-|[01-vpc.tf](modules/01-vpc.tf)|[result_vpc.tf.md](result_vpc.tf.md)|-|
-|[02-sg.tf](modules/02-sg.tf)|[]()|[]()|
-|[03-ec2.tf](modules/03-ec2.tf)|[]()|[]()|
-|[04-rds.tf](modules/04-rds.tf)|[]()|[]()|
-|[05-alb.tf](modules/05-alb.tf)|[]()|[]()|
-|[06-s3.tf](modules/06-s3.tf)|[]()|[]()|
-
-### 後始末`terraform destroy`時の苦悩
-[TryandError10_terraform-destroyできない件.md](TryandError10_terraform-destroyできない件.md)にまとめました
-
-### 簡易的な結果確認
-* EC2にNginxをインストール・起動し、ALBからブラウザでアクセスして確認しました。RDS側の確認まではやっていません。
-![Nginx画面](image/tfで構築したALBのDNSからブラウザでアクセス.png)
-* 一部トライアンドエラーを以下に記載します。上図左のegressについてのルール追加の裏話です
-  * 最初、ALBに適用しているセキュリティグループについてはアウトバウンド(egress)を記述していませんでした。
-  * そのせいではじめは「504 Gateway Timeout」エラーが返されていました。（コンソール見て確認しました）
-  * 調べるとTerraformはアウトバウンドルールを明示的に記述しないとアウトバウンドルールが反映されないようでした。
-
-いろいろ参考にして実装しました。以下の通りです。
+backendの定義をmain.tfに追記する
+```bash
+# backendの定義
+terraform {
+  backend "s3" {
+    bucket = "tf-raisetech-lec10cfn"
+    key = "tf-raisetech-lec10cfn/stage/terraform.tfstate"
+    region = "ap-northeast-1"
+  }
+}
+```
 ## 各moduleを作成
-### main.tfを編集
 stageのディレクトリで`terraform init`してから以下の順に操作
 ```bash
 $ terraform fmt
 $ terraform validate    #計10回はトライアンドエラーしていました。。
 $ terraform apply
 ```
+いろいろ参考にして実装しました。ほとんどリファレンスですが、よろしければ「参考」を展開ください。
+
+<details><summary>参考</summary>
+
+### main.tfを編集
+#### module構成の参考記事
+他にも多くの記事をみましたが、構成のこともわかるし、それにともなう変数の使い方もわかりやすかったものをピックアップして以下にメモします。
+* https://dev.classmethod.jp/articles/directory-layout-bestpractice-in-terraform/
+* https://qiita.com/reireias/items/253529c889cafb3fa4c7
 
 
 ### vpc.tfを編集
@@ -153,4 +162,46 @@ $ terraform apply
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb
   * https://www.terraform.io/docs/providers/aws/r/lb_listener.html
   * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket
+
+</details>
+
+## 結果
+### コーディングや結果
+下表の通りです。
+* main.tfは[stage](stage)フォルダにあります
+* 各リソースごとの.tfファイルは[modules](modules)フォルダにあります
+* 「結果」はマネジメントコンソール画面のキャプチャを撮りためているので、それを上げる予定です
+* 「トランアンドエラー」もキャプチャをとりためているので、それを上げていく予定です
+<br>
+
+|.tfファイル|結果|トライアンドエラー|
+|:---|:---|:---|
+|[main.tf](stage/main.tf)|-|[TryandError01_変数定義の記述場所.md](TryandError01_変数定義の記述場所.md)|
+|[01-vpc.tf](modules/01-vpc.tf)|[result_vpc.tf.md](result_vpc.tf.md)|-|
+|[02-sg.tf](modules/02-sg.tf)|[]()|[]()|
+|[03-ec2.tf](modules/03-ec2.tf)|[]()|[]()|
+|[04-rds.tf](modules/04-rds.tf)|[]()|[]()|
+|[05-alb.tf](modules/05-alb.tf)|[]()|[]()|
+|[06-s3.tf](modules/06-s3.tf)|[]()|[]()|
+
+### 後始末`terraform destroy`時の苦悩
+[TryandError10_terraform-destroyできない件.md](TryandError10_terraform-destroyできない件.md)にまとめました
+
+### 簡易的な結果確認
+* EC2にNginxをインストール・起動し、ALBからブラウザでアクセスして確認しました。RDS側の確認まではやっていません。
+![Nginx画面](image/tfで構築したALBのDNSからブラウザでアクセス.png)
+* 一部トライアンドエラーを以下に記載します。上図左のegressについてのルール追加の裏話です
+  * 最初、ALBに適用しているセキュリティグループについてはアウトバウンド(egress)を記述していませんでした。
+  * そのせいではじめは「504 Gateway Timeout」エラーが返されていました。（コンソール見て確認しました）
+  * 調べるとTerraformはアウトバウンドルールを明示的に記述しないとアウトバウンドルールが反映されないようでした。
+
+## まとめ
+* Terraformを学習することで、CloudFormationの時以上に、深くリソースを理解することができました。
+* AzureやGCPなどほかのクラウドインフラ版にも挑戦したいと思います。
+* Terraform の特徴などを、CloudFormationと比較して、主観で以下にメモします。
+  * Outputを記述しなくても、他リソースのidやarnなどを引用することができる
+  * egressのルール、protectionのルールなど、明示的に記述しないとリソースに反映されない
+  * どのリソースがTerraform で作ったものかを、各現場の運用ルールしたがって管理しておく必要あり（CloudFormationはマネコンでわかる）
+  * 変数定義を各リソースのファイルではなく、別のファイルでまとめられるので、環境ごとの定義が変更しやい
+  * リソース削除の時が少し面倒かも（それも対応可能そうではある）
 

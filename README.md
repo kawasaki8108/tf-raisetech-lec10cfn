@@ -166,6 +166,527 @@ $ terraform apply
 </details>
 
 ## 結果
+* 結果の簡易的に確認しました。確認手順は以下の通りです。
+  * EC2へのSSH接続
+  * EC2からRDS(mysql)への接続
+  * EC2で起動するNginxのwelcomeページ(200ok状態)をALBのDNSをたたいて確認
+<details><summary>詳細な結果確認の手順</summary>
+
+#### インフラストラクチャ作成
+```bash
+$ sudo yum update
+$ sudo yum install mysql
+$ mysql -u admin -p -h ★RDSのエンドポイント★
+#Parameter Storeに保管しているパスワードを入力
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MySQL connection id is 21
+Server version: 8.0.33 Source distribution
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MySQL [(none)]> exit
+Bye
+$ amazon-linux-extras list | grep nginx
+$ sudo amazon-linux-extras install nginx1
+$ nginx -v
+nginx version: nginx/1.22.1
+$ sudo systemctl start nginx
+$ sudo systemctl status nginx
+$ sudo systemctl enable nginx
+$ systemctl is-enabled nginx
+$ curl http://alb-tf-625564651.ap-northeast-1.elb.amazonaws.com/
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+$ exit
+```
+
+#### インフラストラクチャ削除
+##### リソース情報取得
+* 今回Terraformで作ったリソースはtagを入れているので、tagがついたリソースを、AWS CLIで取得します
+  * 公式）https://awscli.amazonaws.com/v2/documentation/api/latest/reference/resourcegroupstaggingapi/get-resources.html
+* 公式docによると、VPCの削除までは以下の順序で操作が必要だそうです
+>1. セキュリティグループ
+>2. 各ネットワーク ACL
+>3. 各サブネット
+>4. 各カスタムルートテーブル
+>5. インターネットゲートウェイを VPC からデタッチ
+>6. インターネットゲートウェイを削除
+>7. エグレス専用インターネットゲートウェイ
+>8. VPC を削除
+* 上記以外にも先にインスタンス（今回はEC2とRDS）を削除しないといけなくてインスタンスのID系が必要なのでいったんこのとおりリソース情報を取得します
+
+まずはリソースの情報取得
+https://docs.aws.amazon.com/cli/latest/reference/resourcegroupstaggingapi/get-resources.html
+```bash
+$ aws resourcegroupstaggingapi get-resources --no-paginate --region ap-northeast-1 \
+--tag-filters Key=Name,\
+Values=20240105-terraform-stage,20240105-terraform-stage-public-1a-sn,20240105-terraform-stage-public-1c-sn
+```
+取得した値は以下の感じになります（抜粋）
+```json
+        {
+            "ResourceARN": "arn:aws:ec2:ap-northeast-1:************:route-table/rtb-0b42571d2f38c6100",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-northeast-1:************:security-group/sg-0a623d83ccb77cd23",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+
+```
+ちなみに取得した全文は以下の通りです。
+<details><summary>取得した全文</summary>
+
+```json
+{
+    "PaginationToken": "",
+    "ResourceTagMappingList": [
+        {
+            "ResourceARN": "arn:aws:ec2:ap-northeast-1:************:security-group/sg-00dbf655578e404fc",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-northeast-1:************:security-group/sg-09a9d28b411280136",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-northeast-1:************:subnet/subnet-0fcfa00a888e5b156",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage-public-1c-sn"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:elasticloadbalancing:ap-northeast-1:************:loadbalancer/app/alb-tf/036cf7d537523dd9",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-northeast-1:************:route-table/rtb-0b42571d2f38c6100",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-northeast-1:************:security-group/sg-0a623d83ccb77cd23",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:rds:ap-northeast-1:************:db:terraform-20240105055854660100000002",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-northeast-1:************:internet-gateway/igw-08aa4966f8bd8df02",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-northeast-1:************:vpc/vpc-0b2521d9a5e690b70",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:rds:ap-northeast-1:************:subgrp:dbsng_tf",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-northeast-1:************:instance/i-0791f5b3652cd1e1e",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage"
+                }
+            ]
+        },
+        {
+            "ResourceARN": "arn:aws:ec2:ap-northeast-1:************:subnet/subnet-0f2369a2d1a1824c8",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "20240105-terraform-stage-public-1a-sn"
+                }
+            ]
+        }
+    ]
+}
+
+```
+</details>
+
+##### ALBのアクセスログをオフにする
+ALBのアクセスログがS3バケットにどんどんたまっていくので、ログの蓄積をまず解除します
+https://docs.aws.amazon.com/cli/latest/reference/elbv2/modify-load-balancer-attributes.html
+```bash
+aws elbv2 modify-load-balancer-attributes --load-balancer-arn arn:aws:elasticloadbalancing:ap-northeast-1:************:loadbalancer/app/alb-tf/036cf7d537523dd9 --attributes Key=access_logs.s3.enabled,Value=false
+```
+※「**********」は伏せているだけです
+以下のように返され、マネジメントコンソールでもアクセスログがオフになっていることがわかります。ALBの「属性」情報で他のパラメータも含めて返されてきますね。
+```json
+{
+    "Attributes": [
+        {
+            "Key": "access_logs.s3.enabled",
+            "Value": "false"  //オフになっています
+        },
+        {
+            "Key": "access_logs.s3.bucket",
+            "Value": "s3-alb-log240104tf"
+        },
+        {
+            "Key": "access_logs.s3.prefix",
+            "Value": ""
+        },
+        {
+            "Key": "idle_timeout.timeout_seconds",
+            "Value": "60"
+        },
+        {
+            "Key": "deletion_protection.enabled",
+            "Value": "false"
+        },
+        {
+            "Key": "routing.http2.enabled",
+            "Value": "true"
+        },
+        {
+            "Key": "routing.http.drop_invalid_header_fields.enabled",
+            "Value": "false"
+        },
+        {
+            "Key": "routing.http.xff_client_port.enabled",
+            "Value": "false"
+        },
+        {
+            "Key": "routing.http.preserve_host_header.enabled",
+            "Value": "false"
+        },
+        {
+            "Key": "routing.http.xff_header_processing.mode",
+            "Value": "append"
+        },
+        {
+            "Key": "load_balancing.cross_zone.enabled",
+            "Value": "true"
+        },
+        {
+            "Key": "routing.http.desync_mitigation_mode",
+            "Value": "defensive"
+        },
+        {
+            "Key": "waf.fail_open.enabled",
+            "Value": "false"
+        },
+        {
+            "Key": "routing.http.x_amzn_tls_version_and_cipher_suite.enabled",
+            "Value": "false"
+        },
+        {
+            "Key": "connection_logs.s3.enabled",
+            "Value": "false"
+        },
+        {
+            "Key": "connection_logs.s3.bucket",
+            "Value": ""
+        },
+        {
+            "Key": "connection_logs.s3.prefix",
+            "Value": ""
+        }
+    ]
+}
+```
+
+
+##### VPC内にあるEC2インスタンスを削除
+* 公式）https://docs.aws.amazon.com/cli/latest/reference/ec2/terminate-instances.html
+* https://blog.serverworks.co.jp/2020/01/10/000000
+```bash
+$ aws ec2 terminate-instances --instance-ids i-0791f5b3652cd1e1e
+#以下の通り返される
+{
+    "TerminatingInstances": [
+        {
+            "CurrentState": {
+                "Code": 32,
+                "Name": "shutting-down"
+            },
+            "InstanceId": "i-0791f5b3652cd1e1e",
+            "PreviousState": {
+                "Code": 16,
+                "Name": "running"
+            }
+        }
+    ]
+}
+```
+
+##### VPC内にあるRDSインスタンスを削除
+公式）https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html
+https://qiita.com/tcsh/items/d7ca66fe8251f865c668
+```bash
+aws rds delete-db-instance \
+    --db-instance-identifier terraform-20240105055854660100000002 \
+    --skip-final-snapshot \
+    --delete-automated-backups
+#以下の通り返される
+{
+    "DBInstance": {
+        "DBInstanceIdentifier": "terraform-20240105055854660100000002",
+        "DBInstanceClass": "db.t3.micro",
+        "Engine": "mysql",
+        "DBInstanceStatus": "deleting",
+        "MasterUsername": "admin",
+        "Endpoint": {
+            "Address": "terraform-20240105055854660100000002.c7nzmtxyau6j.ap-northeast-1.rds.amazonaws.com",
+            "Port": 3306,
+            "HostedZoneId": "Z24O6O9L7SGTNB"
+        },
+        "AllocatedStorage": 10,
+        "InstanceCreateTime": "2024-01-05T06:02:01.112Z",
+        "PreferredBackupWindow": "15:01-15:31",
+        "BackupRetentionPeriod": 0,
+        "DBSecurityGroups": [],
+        "VpcSecurityGroups": [
+            {
+                "VpcSecurityGroupId": "sg-00dbf655578e404fc",
+                "Status": "active"
+            }
+        ],
+        "DBParameterGroups": [
+            {
+                "DBParameterGroupName": "default.mysql8.0",
+                "ParameterApplyStatus": "in-sync"
+            }
+        ],
+        "AvailabilityZone": "ap-northeast-1c",
+        "DBSubnetGroup": {
+            "DBSubnetGroupName": "dbsng_tf",
+            "DBSubnetGroupDescription": "Managed by Terraform",
+            "VpcId": "vpc-0b2521d9a5e690b70",
+            "SubnetGroupStatus": "Complete",
+            "Subnets": [
+                {
+                    "SubnetIdentifier": "subnet-01f2b56b3b0e50b82",
+                    "SubnetAvailabilityZone": {
+                        "Name": "ap-northeast-1a"
+                    },
+                    "SubnetOutpost": {},
+                    "SubnetStatus": "Active"
+                },
+                {
+                    "SubnetIdentifier": "subnet-0f82d6778caf3a507",
+                    "SubnetAvailabilityZone": {
+                        "Name": "ap-northeast-1c"
+                    },
+                    "SubnetOutpost": {},
+                    "SubnetStatus": "Active"
+                }
+            ]
+        },
+        "PreferredMaintenanceWindow": "thu:17:09-thu:17:39",
+        "PendingModifiedValues": {},
+        "MultiAZ": false,
+        "EngineVersion": "8.0.33",
+        "AutoMinorVersionUpgrade": true,
+        "ReadReplicaDBInstanceIdentifiers": [],
+        "LicenseModel": "general-public-license",
+        "OptionGroupMemberships": [
+            {
+                "OptionGroupName": "default:mysql-8-0",
+                "Status": "in-sync"
+            }
+        ],
+        "PubliclyAccessible": false,
+        "StorageType": "gp2",
+        "DbInstancePort": 0,
+        "StorageEncrypted": false,
+        "DbiResourceId": "db-55UM2BIVUVOLVMKO4VIWSWDLSA",
+        "CACertificateIdentifier": "",
+        "DomainMemberships": [],
+        "CopyTagsToSnapshot": false,
+        "MonitoringInterval": 0,
+        "DBInstanceArn": "arn:aws:rds:ap-northeast-1:************:db:terraform-20240105055854660100000002",
+        "IAMDatabaseAuthenticationEnabled": false,
+        "PerformanceInsightsEnabled": false,
+        "DeletionProtection": false,
+        "AssociatedRoles": [],
+        "TagList": [
+            {
+                "Key": "Name",
+                "Value": "20240105-terraform-stage"
+            }
+        ],
+        "CustomerOwnedIpEnabled": false,
+        "BackupTarget": "region",
+        "NetworkType": "IPV4",
+        "StorageThroughput": 0,
+        "DedicatedLogVolume": false
+    }
+}
+```
+
+##### ALBのアクセスログ用のS3バケット内を空にする
+```bash
+$ aws s3 rm s3://s3-alb-log240104tf --recursive
+```
+
+##### 一旦ここまでで`terraform destroy`
+* 私の場合はここでTerraformで作ったリソースはすべて削除できました
+* おそらくですが、ALBの削除保護解除が効いていたかと思います
+* また、以下のTerraformからのメッセージを見ると、公式docにあるVPC削除の流れと似ていますので、依存関係が順序良く外れたのかなと思います
+```
+module.aws-modules.aws_route_table_association.public1c_rt_associate: Destroying... [id=rtbassoc-02f558ec0b0d6e382]
+module.aws-modules.aws_s3_bucket_public_access_block.s3-alb-log-access: Destroying... [id=s3-alb-log240104tf]
+module.aws-modules.aws_route_table_association.public1a_rt_associate: Destroying... [id=rtbassoc-08bab4b863cf28ea8]
+module.aws-modules.aws_s3_bucket_policy.s3-alb-log-bucket-policy: Destroying... [id=s3-alb-log240104tf]
+module.aws-modules.aws_security_group_rule.sg_rds_ingress: Destroying... [id=sgrule-2480648643]
+module.aws-modules.aws_db_subnet_group.dbsng_tf: Destroying... [id=dbsng_tf]
+module.aws-modules.aws_lb_listener.alb-listener_tf: Destroying... [id=arn:aws:elasticloadbalancing:ap-northeast-1:************:listener/app/alb-tf/036cf7d537523dd9/fe5f51316e2bab9d]
+module.aws-modules.aws_db_subnet_group.dbsng_tf: Destruction complete after 0s
+module.aws-modules.aws_subnet.private_1c_sn: Destroying... [id=subnet-0f82d6778caf3a507]
+module.aws-modules.aws_subnet.private_1a_sn: Destroying... [id=subnet-01f2b56b3b0e50b82]
+module.aws-modules.aws_lb_listener.alb-listener_tf: Destruction complete after 0s
+module.aws-modules.aws_lb_target_group.alb-tg_tf: Destroying... [id=arn:aws:elasticloadbalancing:ap-northeast-1:************:targetgroup/alb-tg-tf/e007276deddc61bd]
+module.aws-modules.aws_lb.alb_tf: Destroying... [id=arn:aws:elasticloadbalancing:ap-northeast-1:************:loadbalancer/app/alb-tf/036cf7d537523dd9]
+module.aws-modules.aws_lb_target_group.alb-tg_tf: Destruction complete after 1s
+module.aws-modules.aws_route_table_association.public1a_rt_associate: Destruction complete after 1s
+module.aws-modules.aws_s3_bucket_public_access_block.s3-alb-log-access: Destruction complete after 1s
+module.aws-modules.aws_route_table_association.public1c_rt_associate: Destruction complete after 1s
+module.aws-modules.aws_route_table.public_rt: Destroying... [id=rtb-0b42571d2f38c6100]
+module.aws-modules.aws_security_group_rule.sg_rds_ingress: Destruction complete after 1s
+module.aws-modules.aws_security_group.sg_rds: Destroying... [id=sg-00dbf655578e404fc]
+module.aws-modules.aws_security_group.sg_ec2: Destroying... [id=sg-0a623d83ccb77cd23]
+module.aws-modules.aws_subnet.private_1a_sn: Destruction complete after 1s
+module.aws-modules.aws_subnet.private_1c_sn: Destruction complete after 1s
+module.aws-modules.aws_s3_bucket_policy.s3-alb-log-bucket-policy: Destruction complete after 1s
+module.aws-modules.aws_security_group.sg_ec2: Destruction complete after 0s
+module.aws-modules.aws_route_table.public_rt: Destruction complete after 0s
+module.aws-modules.aws_internet_gateway.gw: Destroying... [id=igw-08aa4966f8bd8df02]
+module.aws-modules.aws_security_group.sg_rds: Destruction complete after 0s
+module.aws-modules.aws_lb.alb_tf: Destruction complete after 2s
+module.aws-modules.aws_subnet.public_1c_sn: Destroying... [id=subnet-0fcfa00a888e5b156]
+module.aws-modules.aws_subnet.public_1a_sn: Destroying... [id=subnet-0f2369a2d1a1824c8]
+module.aws-modules.aws_security_group.sg_alb: Destroying... [id=sg-09a9d28b411280136]
+module.aws-modules.aws_s3_bucket.s3-alb-log240104tf: Destroying... [id=s3-alb-log240104tf]
+module.aws-modules.aws_s3_bucket.s3-alb-log240104tf: Destruction complete after 3s
+module.aws-modules.aws_internet_gateway.gw: Destruction complete after 10s
+module.aws-modules.aws_subnet.public_1c_sn: Still destroying... [id=subnet-0fcfa00a888e5b156, 10s elapsed]
+module.aws-modules.aws_subnet.public_1a_sn: Still destroying... [id=subnet-0f2369a2d1a1824c8, 10s elapsed]
+module.aws-modules.aws_security_group.sg_alb: Still destroying... [id=sg-09a9d28b411280136, 10s elapsed]
+module.aws-modules.aws_security_group.sg_alb: Destruction complete after 18s
+module.aws-modules.aws_subnet.public_1c_sn: Destruction complete after 18s
+module.aws-modules.aws_subnet.public_1a_sn: Destruction complete after 18s
+module.aws-modules.aws_vpc.main_vpc: Destroying... [id=vpc-0b2521d9a5e690b70]
+module.aws-modules.aws_vpc.main_vpc: Destruction complete after 1s
+```
+ここで無理なら下のデタッチをすることがいいと思います
+
+##### IGWをVPCからデタッチ
+* 公式）https://awscli.amazonaws.com/v2/documentation/api/latest/reference/resourcegroupstaggingapi/get-resources.html
+
+
+
+ちなみに、IGWとVPCをデタッチしたらいいと思って、やってみた結果です（失敗）
+まず対象のVPCとIGWを、`terraform apply`したときに返されるメッセージから以下を見つける
+```bash
+module.aws-modules.aws_internet_gateway.gw: Creation complete after 0s [id=igw-08aa4966f8bd8df02]
+module.aws-modules.aws_vpc.main_vpc: Creation complete after 13s [id=vpc-0b2521d9a5e690b70]
+```
+次に自分のAWSアカウント上のVPCidとIGWidを確認
+```bash
+$ aws ec2 describe-internet-gateways --query "InternetGateways[].{InternetGatewayId:InternetGatewayId,VpcId:Attachments[0].VpcId}" --output table
+----------------------------------------------------
+|             DescribeInternetGateways             |
++------------------------+-------------------------+
+|    InternetGatewayId   |          VpcId          |
++------------------------+-------------------------+
+|  igw-024fbd54c5fba3000 |  vpc-0f414928e649b2d55  |
+|  igw-05992e0b2d213d6e1 |  vpc-0077d658a99558030  |
+|  igw-08aa4966f8bd8df02 |  vpc-0b2521d9a5e690b70  |
+|  igw-0e4f53d24972f20c5 |  vpc-060b7b293a32eb2e1  |
++------------------------+-------------------------+
+$ aws ec2 detach-internet-gateway --internet-gateway-id igw-08aa4966f8bd8df02 --vpc-id vpc-0b2521d9a5e690b70
+Network vpc-0b2521d9a5e690b70 has some mapped public address(es). Please unmap those public address(es) before detaching the gateway.
+```
+IGWだけでなく、マッピングされているパブリックアドレスを解除しないといけないみたいです
+
+</details>
+
 ### コーディングや結果
 下表の通りです。
 * コーディングの説明はなるべくコメントアウトとしていれました

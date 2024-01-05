@@ -59,6 +59,7 @@
     * https://docs.aws.amazon.com/ja_jp/vpc/latest/userguide/delete-vpc.html
     * https://repost.aws/ja/knowledge-center/troubleshoot-dependency-error-delete-vpc
   * https://qiita.com/tcsh/items/81006ffe436df3b584ea
+  * https://blog.serverworks.co.jp/aws-cli-network
 
 ## まとめ
 * infrastructureは作るときはさくっとできてしまいますが、後始末はIaC感が薄れます

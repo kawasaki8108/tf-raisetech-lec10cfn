@@ -705,8 +705,9 @@ IGWだけでなく、マッピングされているパブリックアドレス�
 |[06-s3.tf](modules/06-s3.tf)|[]()|[]()|
 
 ### 簡易的な結果確認
-* EC2にNginxをインストール・起動し、ALBからブラウザでアクセスして確認しました。RDS側の確認まではやっていません。
+* EC2にNginxをインストール・起動し、ALBからブラウザでアクセスして確認しました。
 ![Nginx画面](image/tfで構築したALBのDNSからブラウザでアクセス.png)
+* RDSはEC2からmysqlに接続することで確認しました。
 * 一部トライアンドエラーを以下に記載します。上図左のegressについてのルール追加の裏話です
   * 最初、ALBに適用しているセキュリティグループについてはアウトバウンド(egress)を記述していませんでした。
   * そのせいではじめは「504 Gateway Timeout」エラーが返されていました。（コンソール見て確認しました）
@@ -721,8 +722,8 @@ IGWだけでなく、マッピングされているパブリックアドレス�
 * Terraform の特徴などを、CloudFormationと比較して、主観で以下にメモします。
   * Outputを記述しなくても、他リソースのidやarnなどを引用することができる
   * egressのルール、protectionのルールなど、明示的に記述しないとリソースに反映されない
-  * どのリソースがTerraform で作ったものかを、各現場の運用ルールしたがって管理しておく必要あり（CloudFormationはマネコンでわかる）
-  * 変数定義を各リソースのファイルではなく、別のファイルでまとめられるので、環境ごとの定義が変更しやい
+  * どのリソースがTerraform で作ったものかを、各現場の運用ルールにしたがって管理しておく必要あり（CloudFormationはマネコンでわかる）
+  * 変数定義を各リソースのファイルではなく、別のファイルでまとめられるので、環境ごとの定義が変更しやすい
   * リソース削除の時が少し面倒かも（それも対応可能そうではある）
 * リソースの削除について、いろいろトライアンドエラーすることで、リソース間の依存関係の理解が深まりました。 
 
@@ -733,6 +734,94 @@ IGWだけでなく、マッピングされているパブリックアドレス�
 * ただ、先にRDSだけAWS CLIで消しておくと、destroyも早めにおわります
 * 結局この構成図ですと、構築4分（削除も4分）程度で完了することがわかりました<br>
 
-⇒おそらく、terraform側でも、依存関係を加味して？ある程度順序だてて削除（または構築）してくれているのだと思いました
+⇒おそらく、terraform側でも、依存関係を加味して？ある程度順序だてて削除（または構築）してくれているのだと思いました<br>
+* 一気にdestroyできたときのterraformからのターミナル上のメッセージは以下の**参考**を参照ください。
+* 例えば、IGWはVPCから明示的にデタッチせずとも削除完了しています。Terraform側でデタッチしてくれているのかも？
 
+<details><summary>参考</summary>
+
+```
+module.aws-modules.aws_lb_target_group_attachment.alb-tg-ec2_tf: Destroying... [id=arn:aws:elasticloadbalancing:ap-northeast-1:************:targetgroup/alb-tg-tf/6fcdb7499b3e5641-20240105122304890100000003]
+module.aws-modules.aws_route_table_association.public1c_rt_associate: Destroying... [id=rtbassoc-0b9370f52a9ad80ad]
+module.aws-modules.aws_s3_bucket_policy.s3-alb-log-bucket-policy: Destroying... [id=s3-alb-log240104tf]
+module.aws-modules.aws_route_table_association.public1a_rt_associate: Destroying... [id=rtbassoc-0ccd760e40499281b]
+module.aws-modules.aws_s3_bucket_public_access_block.s3-alb-log-access: Destroying... [id=s3-alb-log240104tf]
+module.aws-modules.aws_security_group_rule.sg_rds_ingress: Destroying... [id=sgrule-1098058572]
+module.aws-modules.aws_lb_listener.alb-listener_tf: Destroying... [id=arn:aws:elasticloadbalancing:ap-northeast-1:************:listener/app/alb-tf/0c9005259ee0e1cf/59b6edb162257911]
+module.aws-modules.aws_db_instance.rds_tf: Destroying... [id=terraform-20240105122230543600000002]
+module.aws-modules.aws_lb_target_group_attachment.alb-tg-ec2_tf: Destruction complete after 0s
+module.aws-modules.aws_instance.ec2_tf: Destroying... [id=i-0ec2438634647f7d0]
+module.aws-modules.aws_lb_listener.alb-listener_tf: Destruction complete after 0s
+module.aws-modules.aws_lb_target_group.alb-tg_tf: Destroying... [id=arn:aws:elasticloadbalancing:ap-northeast-1:************:targetgroup/alb-tg-tf/6fcdb7499b3e5641]
+module.aws-modules.aws_lb.alb_tf: Destroying... [id=arn:aws:elasticloadbalancing:ap-northeast-1:************:loadbalancer/app/alb-tf/0c9005259ee0e1cf]
+module.aws-modules.aws_route_table_association.public1a_rt_associate: Destruction complete after 1s
+module.aws-modules.aws_lb_target_group.alb-tg_tf: Destruction complete after 1s
+module.aws-modules.aws_route_table_association.public1c_rt_associate: Destruction complete after 1s
+module.aws-modules.aws_route_table.public_rt: Destroying... [id=rtb-09c188139dcac950d]
+module.aws-modules.aws_s3_bucket_public_access_block.s3-alb-log-access: Destruction complete after 1s
+module.aws-modules.aws_security_group_rule.sg_rds_ingress: Destruction complete after 1s
+module.aws-modules.aws_route_table.public_rt: Destruction complete after 0s
+module.aws-modules.aws_internet_gateway.gw: Destroying... [id=igw-0cda9d66a310a9505]
+module.aws-modules.aws_s3_bucket_policy.s3-alb-log-bucket-policy: Destruction complete after 2s
+module.aws-modules.aws_lb.alb_tf: Destruction complete after 2s
+module.aws-modules.aws_subnet.public_1a_sn: Destroying... [id=subnet-0713cafc610d609f5]
+module.aws-modules.aws_security_group.sg_alb: Destroying... [id=sg-07a2d8735fe556c6e]
+module.aws-modules.aws_s3_bucket.s3-alb-log240104tf: Destroying... [id=s3-alb-log240104tf]
+module.aws-modules.aws_s3_bucket.s3-alb-log240104tf: Destruction complete after 1s
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 10s elapsed]
+module.aws-modules.aws_instance.ec2_tf: Still destroying... [id=i-0ec2438634647f7d0, 10s elapsed]
+module.aws-modules.aws_internet_gateway.gw: Still destroying... [id=igw-0cda9d66a310a9505, 10s elapsed]
+module.aws-modules.aws_subnet.public_1a_sn: Still destroying... [id=subnet-0713cafc610d609f5, 10s elapsed]
+module.aws-modules.aws_security_group.sg_alb: Still destroying... [id=sg-07a2d8735fe556c6e, 10s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 20s elapsed]
+module.aws-modules.aws_instance.ec2_tf: Still destroying... [id=i-0ec2438634647f7d0, 20s elapsed]
+module.aws-modules.aws_internet_gateway.gw: Still destroying... [id=igw-0cda9d66a310a9505, 20s elapsed]
+module.aws-modules.aws_security_group.sg_alb: Still destroying... [id=sg-07a2d8735fe556c6e, 20s elapsed]
+module.aws-modules.aws_subnet.public_1a_sn: Still destroying... [id=subnet-0713cafc610d609f5, 20s elapsed]
+module.aws-modules.aws_internet_gateway.gw: Destruction complete after 28s
+module.aws-modules.aws_security_group.sg_alb: Destruction complete after 28s
+module.aws-modules.aws_subnet.public_1a_sn: Destruction complete after 28s
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 30s elapsed]
+module.aws-modules.aws_instance.ec2_tf: Still destroying... [id=i-0ec2438634647f7d0, 30s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 40s elapsed]
+module.aws-modules.aws_instance.ec2_tf: Still destroying... [id=i-0ec2438634647f7d0, 40s elapsed]
+module.aws-modules.aws_instance.ec2_tf: Destruction complete after 41s
+module.aws-modules.aws_subnet.public_1c_sn: Destroying... [id=subnet-08694754bf24a1bad]
+module.aws-modules.aws_security_group.sg_ec2: Destroying... [id=sg-0f5a72a2246da100b]
+module.aws-modules.aws_subnet.public_1c_sn: Destruction complete after 1s
+module.aws-modules.aws_security_group.sg_ec2: Destruction complete after 1s
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 50s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 1m0s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 1m10s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 1m20s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 1m30s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 1m40s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 1m50s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 2m0s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 2m10s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 2m20s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 2m30s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 2m40s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 2m50s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 3m0s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 3m10s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 3m20s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 3m30s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Still destroying... [id=terraform-20240105122230543600000002, 3m40s elapsed]
+module.aws-modules.aws_db_instance.rds_tf: Destruction complete after 3m47s
+module.aws-modules.aws_db_subnet_group.dbsng_tf: Destroying... [id=dbsng_tf]
+module.aws-modules.aws_security_group.sg_rds: Destroying... [id=sg-00d894f7ea62be410]
+module.aws-modules.aws_db_subnet_group.dbsng_tf: Destruction complete after 0s
+module.aws-modules.aws_subnet.private_1a_sn: Destroying... [id=subnet-09448fe09d9f6c874]
+module.aws-modules.aws_subnet.private_1c_sn: Destroying... [id=subnet-01455425f9d1a3c84]
+module.aws-modules.aws_security_group.sg_rds: Destruction complete after 1s
+module.aws-modules.aws_subnet.private_1a_sn: Destruction complete after 1s
+module.aws-modules.aws_subnet.private_1c_sn: Destruction complete after 1s
+module.aws-modules.aws_vpc.main_vpc: Destroying... [id=vpc-0588a985435dac816]
+module.aws-modules.aws_vpc.main_vpc: Destruction complete after 1s
+
+Destroy complete! Resources: 23 destroyed.
+```
+</details>
+<br>
 以上

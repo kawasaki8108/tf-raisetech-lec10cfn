@@ -25,7 +25,7 @@ resource "aws_subnet" "public_1a_sn" {
   availability_zone = var.az_a
 
   tags = {
-    Name = "${var.create_date}-${var.create_by}-${var.my_env}-public-1a-sn"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 }
 
@@ -36,7 +36,7 @@ resource "aws_subnet" "public_1c_sn" {
   availability_zone = var.az_c
 
   tags = {
-    Name = "${var.create_date}-${var.create_by}-${var.my_env}-public-1c-sn"
+    Name = "${var.create_date}-${var.create_by}-${var.my_env}"
   }
 }
 

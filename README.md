@@ -168,8 +168,7 @@ $ terraform apply
 ## 結果
 ### コーディングや結果
 下表の通りです。
-* main.tfは[stage](stage)フォルダにあります
-* 各リソースごとの.tfファイルは[modules](modules)フォルダにあります
+* コーディングの説明はなるべくコメントアウトとしていれました
 * 「結果」はマネジメントコンソール画面のキャプチャを撮りためているので、それを上げる予定です
 * 「トランアンドエラー」もキャプチャをとりためているので、それを上げていく予定です
 <br>
@@ -184,9 +183,6 @@ $ terraform apply
 |[05-alb.tf](modules/05-alb.tf)|[]()|[]()|
 |[06-s3.tf](modules/06-s3.tf)|[]()|[]()|
 
-### 後始末`terraform destroy`時の苦悩
-[TryandError10_terraform-destroyできない件.md](TryandError10_terraform-destroyできない件.md)にまとめました
-
 ### 簡易的な結果確認
 * EC2にNginxをインストール・起動し、ALBからブラウザでアクセスして確認しました。RDS側の確認まではやっていません。
 ![Nginx画面](image/tfで構築したALBのDNSからブラウザでアクセス.png)
@@ -194,6 +190,9 @@ $ terraform apply
   * 最初、ALBに適用しているセキュリティグループについてはアウトバウンド(egress)を記述していませんでした。
   * そのせいではじめは「504 Gateway Timeout」エラーが返されていました。（コンソール見て確認しました）
   * 調べるとTerraformはアウトバウンドルールを明示的に記述しないとアウトバウンドルールが反映されないようでした。
+
+### 後始末`terraform destroy`時の苦悩
+[TryandError10_terraform-destroyできない件.md](TryandError10_terraform-destroyできない件.md)にまとめました
 
 ## まとめ
 * Terraformを学習することで、CloudFormationの時以上に、深くリソースを理解することができました。

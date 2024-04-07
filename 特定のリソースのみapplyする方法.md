@@ -35,7 +35,7 @@ C:.
                             \---windows_amd64
                                     terraform-provider-aws_v3.76.1_x5.exe
 ```
-- terrafor実行コマンドはstageディレクトリ(実行環境ディレクトリ)で実行する構成
+- terraform実行コマンドはstageディレクトリ(実行環境ディレクトリ)で実行する構成
 
 # 結論
 ```bash
